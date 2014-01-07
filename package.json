@@ -9,7 +9,8 @@
   },
   "main": "./index.js",
   "bin": {
-    "ttyrec++": "./bin/ttyrec++"
+    "ttydebug": "./bin/ttydebug",
+    "ttydebugd": "./bin/ttydebugd"
   },
   "repository": {
     "type": "git",
