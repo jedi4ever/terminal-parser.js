@@ -3,10 +3,9 @@
 // vi: set ft=javascript :
 'use strict';
 
-var Terminal = require('../index.js');
+var TerminalParser = require('../index.js');
 var net = require('net');
 var fs = require('fs');
-var through = require('through');
 var pty = require('pty.js');
 var colors = require('colors');
 
@@ -15,7 +14,9 @@ var penv = JSON.parse(JSON.stringify(process.env));
 var nps1 = [ ps1 , process.env['PS1'] ].join('');
 penv['PS1'] = nps1;
 
-var ts = new Terminal.TermStream();
+var ts = new TerminalParser.ParserStream();
+var opcodes = new TerminalParser.OpcodeStream();
+
 var term = pty.spawn('bash' , [ ], {
   cols: process.stdout.columns,
   rows: process.stdout.rows,
@@ -51,7 +52,6 @@ var outputter = new OpcodeOutputter();
 
 term.setEncoding('utf8');
 
-var opcodes = new Terminal.OpcodeStream();
 
 var socket = net.createConnection('/tmp/terminal-debug');
 
@@ -64,7 +64,7 @@ function end () { //optional
   this.queue(null)
 }
 
-var jsonize = through(write,end);
+//var jsonize = through(write,end);
 
 //var vt100 = fs.createReadStream(process.argv[2], { encoding: 'utf-8' });
 if (typeof process.stdin.setRawMode == 'function') {

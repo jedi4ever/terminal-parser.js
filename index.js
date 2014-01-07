@@ -1,7 +1,3 @@
-var TermStream = require('./lib/terminal-parser');
-var OpcodeStream = require('./lib/opcode_stream');
+var TerminalParser = require('./lib/terminal-parser');
 
-module.exports = {
-  TermStream: TermStream,
-  OpcodeStream: OpcodeStream
-}
+module.exports = TerminalParser;

@@ -4,8 +4,6 @@
 'use strict';
 
 var net = require('net');
-var through = require('through');
-
 
 var server = net.createServer(function(socket) {
   socket.pipe(process.stdout);
