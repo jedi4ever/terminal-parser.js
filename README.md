@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/jedi4ever/terminal-parser.js.png)](https://travis-ci.org/jedi4ever/terminal-parser.js)
+
 Nothing see here yet
 
 # Usage
