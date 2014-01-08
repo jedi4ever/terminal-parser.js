@@ -3,10 +3,63 @@
 // vi: set ft=javascript :
 'use strict';
 
+// Parse Arguments and set defaults
+var minimist = require('minimist');
+var argv = require('minimist')(process.argv.slice(2));
+var fs = require('fs');
+
+var socketPath = argv._[0] || '/tmp/ttydebug';
+
+function help() {
+  var man = [
+    'usage: ttydebugd [socket-path]',
+    '    socket-path: default = /tmp/ttydebug'
+  ];
+  console.log(man.join('\n'));
+  process.exit(0);
+}
+
 var net = require('net');
+var fs = require('fs');
 
-var server = net.createServer(function(socket) {
-  socket.pipe(process.stdout);
-});
+if (fs.existsSync(socketPath)) {
+  console.log('socket file ', socketPath, 'exists');
+  console.log('checking if it is stale ....');
 
-server.listen('/tmp/terminal-debug');
+  var clientSocket = new net.Socket();
+  clientSocket.on('error', function(e) { // handle error trying to talk to server
+
+    if (e.code === 'ECONNREFUSED') {  // No other server listening
+      console.log('removed stale file ', socketPath);
+      fs.unlink(socketPath, function(err) {
+        startServer();
+      });
+    }
+  });
+
+  clientSocket.connect({path: socketPath}, function() {
+    console.log('Server running, giving up...');
+    process.exit();
+  });
+} else {
+  startServer();
+}
+
+function startServer() {
+  console.log('Starting ttydebugd listening on ', socketPath);
+
+  var server = net.createServer(function(socket) {
+    socket.pipe(process.stdout);
+  });
+  server.listen(socketPath);
+
+  function shutdown() {
+    server.close();
+  }
+
+  server.on('error', function(error) {
+    console.error('error starting server', error);
+  });
+
+  process.on('SIGINT', shutdown);
+}

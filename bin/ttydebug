@@ -3,79 +3,101 @@
 // vi: set ft=javascript :
 'use strict';
 
-var TerminalParser = require('../index.js');
-var net = require('net');
-var fs = require('fs');
+// Parse Arguments and set defaults
+var minimist = require('minimist');
+var argv = require('minimist')(process.argv.slice(2));
+
+var shell = argv.e || process.env.SHELL;
+var shellParse = require('shell-quote').parse;
+var shellCmd = shellParse(shell)[0];
+var shellArgs = shellParse(shell).slice(1);
+
+var socketPath = argv._[0] || '/tmp/ttydebug';
+
+function help() {
+  var man = [
+    'usage: ttydebug [-e command] [socket-path]',
+    '    socket-path: default = /tmp/ttydebug',
+    '    command : command to execute . default = $SHELL'
+  ];
+  console.log(man.join('\n'));
+  process.exit(0);
+}
+
+// Prepare pty
 var pty = require('pty.js');
-var colors = require('colors');
 
 var ps1 = '(\\[\\033[5;31m\\]*\\[\\033[0m\\])';
 var penv = JSON.parse(JSON.stringify(process.env));
-var nps1 = [ ps1 , process.env['PS1'] ].join('');
-penv['PS1'] = nps1;
+var nps1 = [ ps1 , process.env.PS1 ].join('');
+penv.PS1 = nps1;
+penv.SHELL = shell;
 
-var ts = new TerminalParser.ParserStream();
-var opcodes = new TerminalParser.OpcodeStream();
-
-var term = pty.spawn('bash' , [ ], {
+var settings = {
   cols: process.stdout.columns,
   rows: process.stdout.rows,
-  cwd: process.env.HOME,
-  //env: { 'PS1' : nps1 } //penv
+  cwd: process.cwd(),
+  command: shellCmd,
+  commandArgs: shellArgs,
   env: penv
-}, 'ansi');
-
-
-var stream = require('stream');
-var util = require('util');
-
-function OpcodeOutputter() {
-  OpcodeOutputter.super_.call(this, { decodeStrings: false, objectMode: true});
 };
 
-util.inherits(OpcodeOutputter, stream.Transform);
+var _pty = pty.spawn(settings.command , settings.commandArgs, {
+  cmd: settings.cwd,
+  env: settings.env,
+  cols: settings.cols,
+  rows: settings.rows
+});
 
-OpcodeOutputter.prototype._transform = function(chunk, encoding, callback) {
-  if (chunk.code === 'OP') {
-    this.push(JSON.stringify(chunk).green +'\n');
-  } else {
-    if (chunk.code === 'CHAR') {
-      this.push(JSON.stringify(chunk).blue +'\n');
-    } else {
-      this.push(JSON.stringify(chunk).red +'\n');
-    }
-  }
-  callback();
-};
-
-var outputter = new OpcodeOutputter();
-
-term.setEncoding('utf8');
-
-
-var socket = net.createConnection('/tmp/terminal-debug');
-
-function write(data) {
-  console.log(data);
-  this.queue(data) //data *must* not be null
-};
-
-function end () { //optional
-  this.queue(null)
-}
-
-//var jsonize = through(write,end);
-
-//var vt100 = fs.createReadStream(process.argv[2], { encoding: 'utf-8' });
-if (typeof process.stdin.setRawMode == 'function') {
-  process.stdin.setRawMode(true);
-};
-
-process.stdin.pipe(term);
-term.pipe(process.stdout);
-term.pipe(ts).pipe(opcodes).pipe(outputter).pipe(socket); //.pipe(process.stdout);
-//term.pipe(ts).pipe(opcodes).pipe(socket); //.pipe(process.stdout);
-term.on('end', function() {
+_pty.on('end', function (data) {
   process.exit();
 });
-//vt100.pipe(ts);
+
+_pty.setEncoding('utf8');
+
+var net = require('net');
+
+// Connect to socket
+var socket = net.createConnection(socketPath);
+socket.setEncoding('utf8');
+
+socket.on('error', function(err) {
+  console.error('Error connecting to socket', socketPath, ':', err);
+  process.exit(-1);
+});
+
+// Connect stdin to pty
+process.stdin.pipe(_pty);
+
+// Output pty to stdout
+_pty.pipe(process.stdout);
+
+var TerminalParser = require('../index.js');
+var opcodes = new TerminalParser.OpcodeStream({ stringify: false });
+opcodes.on('error', function(err) {
+  console.error('Error with opcodes', err);
+  process.exit(-1);
+});
+
+// Prepare output formatter
+var colors = require('colors');
+
+var formatter = function(chunk, encoding) {
+  if (chunk.code === 'OP') {
+    return JSON.stringify(chunk).green +'\n';
+  } else {
+    if (chunk.code === 'CHAR') {
+      return JSON.stringify(chunk).blue +'\n';
+    } else {
+      return JSON.stringify(chunk).red +'\n';
+    }
+  }
+};
+
+opcodes.addTransformation(formatter);
+
+if (typeof process.stdin.setRawMode === 'function') {
+    process.stdin.setRawMode(true);
+}
+
+_pty.pipe(opcodes).pipe(socket);

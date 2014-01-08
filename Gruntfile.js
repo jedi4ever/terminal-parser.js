@@ -22,7 +22,7 @@ module.exports = function(grunt) {
       },
       lib: {
         files: {
-          src: ['lib/**/*.js']
+          src: ['lib/**/*.js', 'bin/ttydebug', 'bin/ttydebugd']
         },
         options: {
           node: true,
