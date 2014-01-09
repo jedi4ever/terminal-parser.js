@@ -73,13 +73,4 @@ describe('parserOsc', function () {
     done();
   });
 
-  it('can parse', function(done) {
-    var t = 'blal' + esc + 'Z' + osc + '0' +  st + csi + '019a' + apc + 'bla' + st + 'beep' + esc + '#8';
-    var token = parser.parse(t);
-    console.log(token);
-    expect(token).not.to.be(null);
-    done();
-  });
-
-
 });

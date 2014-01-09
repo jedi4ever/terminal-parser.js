@@ -5,8 +5,8 @@ describe('terminal opcode stream', function () {
 
     var text = 'beepboop';
 
-    stream.on('data', function(data) {
-      expect(data.data).to.be(text);
+    stream.on('data', function(token) {
+      expect(token.text).to.be(text);
       done();
     });
 
@@ -19,9 +19,9 @@ describe('terminal opcode stream', function () {
 
     var text = '\x1b[0;3r';
 
-    stream.on('data', function(data) {
-      expect(data.code).to.be('OP');
-      expect(data.ops).to.not.be.empty();
+    stream.on('data', function(token) {
+      expect(token.type).to.be('OP');
+      expect(token.ops).to.not.be.empty();
       done();
     });
 

@@ -18,7 +18,7 @@ describe('parserEsc', function () {
 
     var token = parser.parseEsc(esc + text);
     expect(token).to.not.be(null);
-    expect(token.char).to.be(text[0]);
+    expect(token.cmd).to.be(text[0]);
     expect(token.type).to.be('esc');
     expect(token.length).to.be(2);
 
@@ -39,7 +39,7 @@ describe('parserEsc', function () {
     var token = parser.parseEsc(t);
     expect(token).to.not.be(null);
     expect(token.type).to.be('esc');
-    expect(token.char).to.be('M');
+    expect(token.cmd).to.be('M');
     expect(token.length).to.be(2);
 
     done();
@@ -51,7 +51,7 @@ describe('parserEsc', function () {
     var token = parser.parseEsc(t);
     expect(token).to.not.be(null);
     expect(token.type).to.be('esc');
-    expect(token.char).to.be('(');
+    expect(token.cmd).to.be('(');
     expect(token.length).to.be(3);
 
     done();
@@ -63,7 +63,7 @@ describe('parserEsc', function () {
     var token = parser.parseEsc(t);
     expect(token).to.not.be(null);
     expect(token.type).to.be('esc');
-    expect(token.char).to.be('(');
+    expect(token.cmd).to.be('(');
     expect(token.final).to.be(false);
 
     done();
@@ -75,7 +75,7 @@ describe('parserEsc', function () {
     var token = parser.parseEsc(t);
     expect(token).to.not.be(null);
     expect(token.type).to.be('esc');
-    expect(token.char).to.be(' ');
+    expect(token.cmd).to.be(' ');
     expect(token.final).to.be(false);
 
     done();
