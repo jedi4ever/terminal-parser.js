@@ -27,11 +27,60 @@ describe('parserEsc', function () {
 
   it('can handle an esc only', function(done) {
 
-    var token = parser.parseChr(esc);
+    var token = parser.parseEsc(esc);
     expect(token).to.be(null);
 
     done();
   });
+
+  it('can handle an multi esc', function(done) {
+    var t = '\u001bM\b\u001b[J';
+
+    var token = parser.parseEsc(t);
+    expect(token).to.not.be(null);
+    expect(token.type).to.be('esc');
+    expect(token.char).to.be('M');
+    expect(token.length).to.be(2);
+
+    done();
+  });
+
+  it('can handle a multichar esc', function(done) {
+    var t = '\x1b(0';
+
+    var token = parser.parseEsc(t);
+    expect(token).to.not.be(null);
+    expect(token.type).to.be('esc');
+    expect(token.char).to.be('(');
+    expect(token.length).to.be(3);
+
+    done();
+  });
+
+  it('can handle an unfinished multichar esc', function(done) {
+    var t = '\x1b(';
+
+    var token = parser.parseEsc(t);
+    expect(token).to.not.be(null);
+    expect(token.type).to.be('esc');
+    expect(token.char).to.be('(');
+    expect(token.final).to.be(false);
+
+    done();
+  });
+
+  it('can handle an unfinished multichar esc SP', function(done) {
+    var t = '\x1b ';
+
+    var token = parser.parseEsc(t);
+    expect(token).to.not.be(null);
+    expect(token.type).to.be('esc');
+    expect(token.char).to.be(' ');
+    expect(token.final).to.be(false);
+
+    done();
+  });
+
 
 
 });

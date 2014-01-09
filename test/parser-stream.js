@@ -6,8 +6,8 @@ describe('terminal parser stream', function () {
     var text = 'beepboop';
 
     stream.on('data', function(data) {
-      expect(data.code).to.be('CHAR');
-      expect(data.data).to.be(text);
+      expect(data.type).to.be('text');
+      expect(data.text).to.be(text);
       done();
     });
 
@@ -21,10 +21,9 @@ describe('terminal parser stream', function () {
     var text = '\x1b[0;3r';
 
     stream.on('data', function(data) {
-      expect(data.code).to.be('CSI');
+      expect(data.type).to.be('csi');
       expect(data.cmd).to.be('r');
-      expect(data.n).to.be(0);
-      expect(data.m).to.be(3);
+      expect(data.args).to.eql([0, 3]);
       done();
     });
 

@@ -36,5 +36,12 @@ describe('parserChr', function () {
     done();
   });
 
+  it('can handle esc-z only', function(done) {
+
+    var token = parser.parseChr(esc+'Z');
+    expect(token).to.be(null);
+
+    done();
+  });
 
 });
