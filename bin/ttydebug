@@ -83,10 +83,10 @@ opcodes.on('error', function(err) {
 var colors = require('colors');
 
 var formatter = function(chunk, encoding) {
-  if (chunk.code === 'OP') {
+  if (chunk.type === 'OP') {
     return JSON.stringify(chunk).green +'\n';
   } else {
-    if (chunk.code === 'CHAR') {
+    if (chunk.type === 'text') {
       return JSON.stringify(chunk).blue +'\n';
     } else {
       return JSON.stringify(chunk).red +'\n';

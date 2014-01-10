@@ -50,6 +50,9 @@ function startServer() {
 
   var server = net.createServer(function(socket) {
     socket.pipe(process.stdout);
+    socket.on('disconnect', function() {
+      socket.unpipe(process.stdout);
+    });
   });
   server.listen(socketPath);
 
