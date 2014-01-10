@@ -73,4 +73,18 @@ describe('parserOsc', function () {
     done();
   });
 
+  it('can handle an osc command with multiple terminators', function(done) {
+
+    var t = osc +  '0;abcd' + bel + 'bladibla' + '\x1bX';
+    var token = parser.parseOsc(t, '\x1bX');
+    expect(token).not.to.be(null);
+    expect(token.type).to.be('osc');
+    expect(token.cmd).to.be('0;abcd');
+    expect(token.m).to.be('abcd');
+    expect(token.n).to.be(0);
+    expect(token.length).to.be(9);
+
+    done();
+  });
+
 });
