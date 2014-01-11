@@ -5,6 +5,9 @@
 
 // Parse Arguments and set defaults
 var minimist = require('minimist');
+// My own hacked keypress for now
+var keypress = require('../lib/keypress');
+
 var argv = require('minimist')(process.argv.slice(2));
 
 var shell = argv.e || process.env.SHELL;
@@ -69,6 +72,33 @@ socket.on('error', function(err) {
 // Connect stdin to pty
 process.stdin.pipe(_pty);
 
+keypress(process.stdin);
+
+if (typeof process.stdin.setRawMode === 'function') {
+    process.stdin.setRawMode(true);
+}
+
+// Note we have to listen for keypress otherwise we don't detect mousepresses
+process.stdin.on('keypress', function (c, key) {
+  //console.log(0,c, key);
+});
+
+process.stdout.on('resize', function () {
+  var resize = {
+    cols: process.stdout.columns,
+    rows: process.stdout.rows,
+    type: 'resize'
+  };
+  socket.write(JSON.stringify(resize)+'\n');
+});
+
+process.stdin.on('mousepress', function (mouse) {
+  //console.log(mouse);
+  socket.write(JSON.stringify(mouse)+'\n');
+});
+
+//keypress.enableMouse(_pty);
+
 // Output pty to stdout
 _pty.pipe(process.stdout);
 
@@ -96,8 +126,5 @@ var formatter = function(chunk, encoding) {
 
 opcodes.addTransformation(formatter);
 
-if (typeof process.stdin.setRawMode === 'function') {
-    process.stdin.setRawMode(true);
-}
 
 _pty.pipe(opcodes).pipe(socket);
