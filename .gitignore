@@ -3,6 +3,7 @@ node_modules/*
 *.run
 tmp/*
 .*.swp
+.swp
 coverage.html
 config.js
 .grunt
