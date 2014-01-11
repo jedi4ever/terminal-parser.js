@@ -89,6 +89,7 @@ process.stdout.on('resize', function () {
     rows: process.stdout.rows,
     type: 'resize'
   };
+  _pty.resize(process.stdout.columns, process.stdout.rows);
   socket.write(JSON.stringify(resize)+'\n');
 });
 
