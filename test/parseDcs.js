@@ -38,4 +38,51 @@ describe('parserDcs', function () {
     done();
   });
 
+  it('can handle an null parse', function(done) {
+
+    var token = parser.parseDcs(null);
+    expect(token).to.be(null);
+
+    done();
+  });
+
+  it('can handle an esc parse', function(done) {
+
+    var token = parser.parseDcs(esc);
+    expect(token).to.be(null);
+
+    done();
+  });
+
+  it('can handle an esc-P parse', function(done) {
+
+    var token = parser.parseDcs(esc + 'P');
+    expect(token).to.be(null);
+
+    done();
+  });
+
+  it('can handle a custom ST', function(done) {
+
+    var customSt= esc + '\\';
+    var t = esc + 'P' + text +  customSt;
+    var token = parser.parseDcs(t, customSt);
+    expect(token).not.to.be(null);
+    expect(token.type).to.be('dcs');
+    expect(token.cmd).to.be(text);
+
+    done();
+  });
+
+  it('can handle a incomplete dcs chunk', function(done) {
+
+    var customSt= esc + '\\';
+    var t = esc + 'P' + text ;
+    var token = parser.parseDcs(t, customSt);
+    expect(token).to.be(null);
+
+    done();
+  });
+
+
 });
