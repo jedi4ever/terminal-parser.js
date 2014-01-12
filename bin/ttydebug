@@ -98,6 +98,13 @@ process.stdin.on('mousepress', function (mouse) {
   socket.write(JSON.stringify(mouse)+'\n');
 });
 
+// Bracketed Paste mode 
+// http://stackoverflow.com/questions/5585129/pasting-code-into-terminal-window-into-vim-on-mac-os-x/7053522#7053522
+// http://cirw.in/blog/bracketed-paste 
+process.stdin.on('data', function (data) {
+  socket.write(JSON.stringify({ type: 'stdin', data: data })+'\n');
+});
+
 //keypress.enableMouse(_pty);
 
 // Output pty to stdout
