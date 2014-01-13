@@ -17,12 +17,16 @@ describe('terminal opcode stream', function () {
   it('can handle CSI characters', function(done) {
     var stream = new TerminalParser.OpcodeStream();
 
-    var text = '\x1b[0;3r';
+    var text = 'hahaha\x1b[A';
 
+    var count = 0;
     stream.on('data', function(token) {
-      expect(token.type).to.be('OP');
-      expect(token.ops).to.not.be.empty();
-      done();
+      count++;
+      if (count === 2) {
+        expect(token.type).to.be('OP');
+        expect(token.ops).to.not.be.empty();
+        done();
+      }
     });
 
     stream.write(text);

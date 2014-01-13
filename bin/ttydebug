@@ -117,6 +117,8 @@ opcodes.on('error', function(err) {
   process.exit(-1);
 });
 
+var cursor = new TerminalParser.BufferStream({ stringify: false });
+
 // Prepare output formatter
 var colors = require('colors');
 
@@ -134,5 +136,11 @@ var formatter = function(chunk, encoding) {
 
 opcodes.addTransformation(formatter);
 
+var formatter2 = function(chunk, encoding) {
+    return JSON.stringify(chunk).yellow +'\n';
+};
+
+cursor.addTransformation(formatter2);
 
 _pty.pipe(opcodes).pipe(socket);
+_pty.pipe(cursor).pipe(socket);
