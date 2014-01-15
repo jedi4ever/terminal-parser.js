@@ -44,4 +44,12 @@ describe('parserChr', function () {
     done();
   });
 
+  it('can handle backspace in text', function(done) {
+    var token = parser.parseChr('one\btwo');
+    expect(token.type).to.be('text');
+    expect(token.text).to.be('one');
+
+    done();
+  });
+
 });

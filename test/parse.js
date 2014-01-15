@@ -18,5 +18,11 @@ describe('parser', function () {
     done();
   });
 
+  it.only('can parse a terminated string', function(done) {
+    var t = 'blal' + '\r\n';
+    var token = parser.parse(t);
+    expect(token).to.be(null);
+    done();
+  });
 
 });
