@@ -11,7 +11,7 @@ var keypress = require('../lib/keypress');
 var argv = require('minimist')(process.argv.slice(2));
 
 var shell = argv.e || process.env.SHELL;
-var format = argv.f || 'opcode,text,stdin,mouse';
+var format = argv.f || 'opcode,text,stdin,mouse,resize';
 var formats = format.split(',');
 
 var shellParse = require('shell-quote').parse;
@@ -25,7 +25,7 @@ function help() {
     'usage: ttydebug [-f formats] [-e command] [socket-path]',
     '    socket-path: default = /tmp/ttydebug',
     '    command : command to execute . default = $SHELL',
-    '    formats: comma separated list of formats (opcode,mouse,raw,text). default = opcode,text,stdin,mouse'
+    '    formats: comma separated list of formats (opcode,mouse,raw,text). default = opcode,text,stdin,mouse,resize'
   ];
   console.log(man.join('\n'));
   process.exit(0);
@@ -87,23 +87,6 @@ process.stdin.on('keypress', function (c, key) {
   //console.log(0,c, key);
 });
 
-process.stdout.on('resize', function () {
-  var resize = {
-    cols: process.stdout.columns,
-    rows: process.stdout.rows,
-    type: 'resize'
-  };
-  _pty.resize(process.stdout.columns, process.stdout.rows);
-  socket.write(JSON.stringify(resize)+'\n');
-});
-
-process.stdin.on('mousepress', function (mouse) {
-  //console.log(mouse);
-  socket.write(JSON.stringify(mouse)+'\n');
-});
-
-
-//keypress.enableMouse(_pty);
 
 // Output pty to stdout
 _pty.pipe(process.stdout);
@@ -120,7 +103,12 @@ opcodes.on('error', function(err) {
 
 var filterStream = new TerminalParser.FilterStream({ stringify: false });
 
-var buffer = new TerminalParser.BufferStream({ stringify: false });
+var bufferOptions = {
+      cols: process.stdout.columns,
+      rows: process.stdout.rows,
+};
+
+var buffer = new TerminalParser.BufferStream(bufferOptions);
 
 // Prepare output formatter
 var colors = require('colors');
@@ -146,7 +134,14 @@ var opcodeFormatter = function(chunk, encoding) {
 opcodes.addTransformation(opcodeFormatter);
 
 var bufferFormatter = function(chunk, encoding) {
-  return '\x1bc'+ JSON.stringify(chunk).yellow ;
+  if (chunk !== null) {
+    return [ '\x1bc' + JSON.stringify(chunk.cursor).yellow,
+      JSON.stringify(chunk.length).green,
+      JSON.stringify(chunk.size).white,
+      //JSON.stringify(chunk.lines).white,
+      chunk.text
+    ].join('\n');
+  }
 };
 
 var rawFormatter = function(chunk, encoding) {
@@ -155,11 +150,11 @@ var rawFormatter = function(chunk, encoding) {
     return JSON.stringify('something ugly happened').underline +'\n';
   }
 
-    if (chunk.type === 'text') {
-      return jsonString.blue +'\n';
-    } else {
-      return JSON.stringify(chunk).green +'\n';
-    }
+  if (chunk.type === 'text') {
+    return jsonString.blue +'\n';
+  } else {
+    return JSON.stringify(chunk).green +'\n';
+  }
 };
 
 buffer.addTransformation(bufferFormatter);
@@ -175,12 +170,31 @@ if (formats.indexOf('buffer') >= 0) {
   _pty.pipe(buffer).pipe(socket);
 }
 
+if (formats.indexOf('mouse') >= 0) {
+  process.stdin.on('mousepress', function (mouse) {
+    //console.log(mouse);
+    socket.write(JSON.stringify(mouse)+'\n');
+  });
+}
+
 if (formats.indexOf('raw') >= 0) {
   _pty.pipe(raw).pipe(socket);
 }
 
 if (formats.indexOf('text') >= 0) {
   _pty.pipe(filterStream).pipe(socket);
+}
+
+if (formats.indexOf('resize') >= 0) {
+  process.stdout.on('resize', function () {
+    var resize = {
+      cols: process.stdout.columns,
+      rows: process.stdout.rows,
+      type: 'resize'
+    };
+    _pty.resize(process.stdout.columns, process.stdout.rows);
+    socket.write(JSON.stringify(resize)+'\n');
+  });
 }
 
 if (formats.indexOf('stdin') >= 0) {
