@@ -146,7 +146,7 @@ var opcodeFormatter = function(chunk, encoding) {
 opcodes.addTransformation(opcodeFormatter);
 
 var bufferFormatter = function(chunk, encoding) {
-  return JSON.stringify(chunk).yellow +'\n';
+  return '\x1bc'+ JSON.stringify(chunk).yellow ;
 };
 
 var rawFormatter = function(chunk, encoding) {
