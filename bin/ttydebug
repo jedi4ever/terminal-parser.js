@@ -11,7 +11,7 @@ var keypress = require('../lib/keypress');
 var argv = require('minimist')(process.argv.slice(2));
 
 var shell = argv.e || process.env.SHELL;
-var format = argv.f || 'ops,text,stdin,mouse';
+var format = argv.f || 'opcode,text,stdin,mouse';
 var formats = format.split(',');
 
 var shellParse = require('shell-quote').parse;
@@ -22,9 +22,10 @@ var socketPath = argv._[0] || '/tmp/ttydebug';
 
 function help() {
   var man = [
-    'usage: ttydebug [-e command] [socket-path]',
+    'usage: ttydebug [-f formats] [-e command] [socket-path]',
     '    socket-path: default = /tmp/ttydebug',
-    '    command : command to execute . default = $SHELL'
+    '    command : command to execute . default = $SHELL',
+    '    formats: comma separated list of formats (opcode,mouse,raw,text). default = opcode,text,stdin,mouse'
   ];
   console.log(man.join('\n'));
   process.exit(0);
@@ -108,6 +109,9 @@ process.stdin.on('mousepress', function (mouse) {
 _pty.pipe(process.stdout);
 
 var TerminalParser = require('../index.js');
+
+var raw = new TerminalParser.ParserStream();
+
 var opcodes = new TerminalParser.OpcodeStream({ stringify: false });
 opcodes.on('error', function(err) {
   console.error('Error with opcodes', err);
@@ -116,12 +120,12 @@ opcodes.on('error', function(err) {
 
 var filterStream = new TerminalParser.FilterStream({ stringify: false });
 
-var cursor = new TerminalParser.BufferStream({ stringify: false });
+var buffer = new TerminalParser.BufferStream({ stringify: false });
 
 // Prepare output formatter
 var colors = require('colors');
 
-var formatter = function(chunk, encoding) {
+var opcodeFormatter = function(chunk, encoding) {
   var jsonString = JSON.stringify(chunk);
 
   if (jsonString === undefined) {
@@ -139,22 +143,40 @@ var formatter = function(chunk, encoding) {
   }
 };
 
-opcodes.addTransformation(formatter);
+opcodes.addTransformation(opcodeFormatter);
 
-var formatter2 = function(chunk, encoding) {
+var bufferFormatter = function(chunk, encoding) {
   return JSON.stringify(chunk).yellow +'\n';
 };
 
-cursor.addTransformation(formatter2);
+var rawFormatter = function(chunk, encoding) {
+  var jsonString = JSON.stringify(chunk);
+  if (jsonString === undefined) {
+    return JSON.stringify('something ugly happened').underline +'\n';
+  }
 
+    if (chunk.type === 'text') {
+      return jsonString.blue +'\n';
+    } else {
+      return JSON.stringify(chunk).green +'\n';
+    }
+};
+
+buffer.addTransformation(bufferFormatter);
+
+raw.addTransformation(rawFormatter);
 
 // See what we need to output
-if (formats.indexOf('ops') >= 0) {
+if (formats.indexOf('opcode') >= 0) {
   _pty.pipe(opcodes).pipe(socket);
 }
 
-if (formats.indexOf('cursor') >= 0) {
-  _pty.pipe(cursor).pipe(socket);
+if (formats.indexOf('buffer') >= 0) {
+  _pty.pipe(buffer).pipe(socket);
+}
+
+if (formats.indexOf('raw') >= 0) {
+  _pty.pipe(raw).pipe(socket);
 }
 
 if (formats.indexOf('text') >= 0) {
