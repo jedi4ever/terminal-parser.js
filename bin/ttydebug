@@ -123,11 +123,17 @@ var cursor = new TerminalParser.BufferStream({ stringify: false });
 var colors = require('colors');
 
 var formatter = function(chunk, encoding) {
+  var jsonString = JSON.stringify(chunk);
+
+  if (jsonString === undefined) {
+        return JSON.stringify('something ugly happened').underline +'\n';
+  }
+
   if (chunk.type === 'OP') {
-    return JSON.stringify(chunk).green +'\n';
+    return jsonString.green +'\n';
   } else {
     if (chunk.type === 'text') {
-      return JSON.stringify(chunk).blue +'\n';
+      return jsonString.blue +'\n';
     } else {
       return JSON.stringify(chunk).red +'\n';
     }
