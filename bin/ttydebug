@@ -11,6 +11,9 @@ var keypress = require('../lib/keypress');
 var argv = require('minimist')(process.argv.slice(2));
 
 var shell = argv.e || process.env.SHELL;
+var format = argv.f || 'ops,text,stdin,mouse';
+var formats = format.split(',');
+
 var shellParse = require('shell-quote').parse;
 var shellCmd = shellParse(shell)[0];
 var shellArgs = shellParse(shell).slice(1);
@@ -75,7 +78,7 @@ process.stdin.pipe(_pty);
 keypress(process.stdin);
 
 if (typeof process.stdin.setRawMode === 'function') {
-    process.stdin.setRawMode(true);
+  process.stdin.setRawMode(true);
 }
 
 // Note we have to listen for keypress otherwise we don't detect mousepresses
@@ -98,12 +101,6 @@ process.stdin.on('mousepress', function (mouse) {
   socket.write(JSON.stringify(mouse)+'\n');
 });
 
-// Bracketed Paste mode 
-// http://stackoverflow.com/questions/5585129/pasting-code-into-terminal-window-into-vim-on-mac-os-x/7053522#7053522
-// http://cirw.in/blog/bracketed-paste 
-process.stdin.on('data', function (data) {
-  socket.write(JSON.stringify({ type: 'stdin', data: data })+'\n');
-});
 
 //keypress.enableMouse(_pty);
 
@@ -117,6 +114,8 @@ opcodes.on('error', function(err) {
   process.exit(-1);
 });
 
+var filterStream = new TerminalParser.FilterStream({ stringify: false });
+
 var cursor = new TerminalParser.BufferStream({ stringify: false });
 
 // Prepare output formatter
@@ -126,7 +125,7 @@ var formatter = function(chunk, encoding) {
   var jsonString = JSON.stringify(chunk);
 
   if (jsonString === undefined) {
-        return JSON.stringify('something ugly happened').underline +'\n';
+    return JSON.stringify('something ugly happened').underline +'\n';
   }
 
   if (chunk.type === 'OP') {
@@ -143,10 +142,31 @@ var formatter = function(chunk, encoding) {
 opcodes.addTransformation(formatter);
 
 var formatter2 = function(chunk, encoding) {
-    return JSON.stringify(chunk).yellow +'\n';
+  return JSON.stringify(chunk).yellow +'\n';
 };
 
 cursor.addTransformation(formatter2);
 
-_pty.pipe(opcodes).pipe(socket);
-_pty.pipe(cursor).pipe(socket);
+
+// See what we need to output
+if (formats.indexOf('ops') >= 0) {
+  _pty.pipe(opcodes).pipe(socket);
+}
+
+if (formats.indexOf('cursor') >= 0) {
+  _pty.pipe(cursor).pipe(socket);
+}
+
+if (formats.indexOf('text') >= 0) {
+  _pty.pipe(filterStream).pipe(socket);
+}
+
+if (formats.indexOf('stdin') >= 0) {
+
+  // Bracketed Paste mode 
+  // http://stackoverflow.com/questions/5585129/pasting-code-into-terminal-window-into-vim-on-mac-os-x/7053522#7053522
+  // http://cirw.in/blog/bracketed-paste 
+  process.stdin.on('data', function (data) {
+    socket.write(JSON.stringify({ type: 'stdin', data: data })+'\n');
+  });
+}
