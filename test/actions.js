@@ -93,7 +93,6 @@ describe.only('terminal buffer actions', function () {
     buffer.cursor = { x: 0, y: 0 };
     buffer.size = { cols: 4 , rows: 2};
     buffer.lines = [];
-    buffer.lines[0] = ['a'];
     var n = a.newLine(buffer);
     expect(n.lines.length).to.be(2);
     expect(n.cursor.x).to.be(0);
