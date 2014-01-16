@@ -1,4 +1,4 @@
-describe.only('terminal buffer actions', function () {
+describe('terminal buffer actions', function () {
 
   var a = TerminalParser.actions;
   it('cursor_move', function(done) {
