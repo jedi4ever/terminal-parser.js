@@ -135,12 +135,15 @@ opcodes.addTransformation(opcodeFormatter);
 
 var bufferFormatter = function(chunk, encoding) {
   if (chunk !== null) {
-    return [ '\x1bc' + JSON.stringify(chunk.cursor).yellow,
+    var output = [ '\x1bc' + JSON.stringify(chunk.cursor).yellow,
       JSON.stringify(chunk.length).green,
       JSON.stringify(chunk.size).white,
-      //JSON.stringify(chunk.lines).white,
-      chunk.text
-    ].join('\n');
+    ];
+
+    chunk.lines.forEach(function(line) {
+      output.push(JSON.stringify(line, null).white);
+    });
+    return output.join('\n');
   }
 };
 

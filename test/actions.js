@@ -1,4 +1,4 @@
-describe('terminal buffer actions', function () {
+describe.only('terminal buffer actions', function () {
 
   var a = TerminalParser.actions;
   it('cursor_move', function(done) {
@@ -63,7 +63,7 @@ describe('terminal buffer actions', function () {
 
   });
 
-  it('inserts standard text', function(done) {
+  it('inserts standard text beyond the screen rows', function(done) {
     var buffer = {};
     buffer.cursor = { x: 0, y: 0 };
     buffer.size = { cols: 4 , rows: 2};
@@ -86,6 +86,31 @@ describe('terminal buffer actions', function () {
     expect(n).to.be(true);
     done();
 
+  });
+
+  it('inserts a new line', function(done) {
+    var buffer = {};
+    buffer.cursor = { x: 0, y: 0 };
+    buffer.size = { cols: 4 , rows: 2};
+    buffer.lines = [];
+    buffer.lines[0] = ['a'];
+    var n = a.newLine(buffer);
+    expect(n.lines.length).to.be(2);
+    expect(n.cursor.x).to.be(0);
+    expect(n.cursor.y).to.be(1);
+    done();
+  });
+
+  it('inserts a new line at the last line', function(done) {
+    var buffer = {};
+    buffer.cursor = { x: 0, y: 1 };
+    buffer.size = { cols: 4 , rows: 2};
+    buffer.lines = [];
+    var n = a.newLine(buffer);
+    expect(n.lines.length).to.be(2);
+    expect(n.cursor.x).to.be(0);
+    expect(n.cursor.y).to.be(1);
+    done();
   });
 
 });
