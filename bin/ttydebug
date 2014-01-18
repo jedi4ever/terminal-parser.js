@@ -3,6 +3,12 @@
 // vi: set ft=javascript :
 'use strict';
 
+
+require('nodetime').profile({
+   accountKey: '23f3e47c1fee09da94f3c9fc3363a2743ccd9a64',
+    appName: 'ttydebug'
+  });
+
 // Parse Arguments and set defaults
 var minimist = require('minimist');
 // My own hacked keypress for now
@@ -135,14 +141,18 @@ opcodes.addTransformation(opcodeFormatter);
 
 var bufferFormatter = function(chunk, encoding) {
   if (chunk !== null) {
-    var output = [ '\x1bc' + JSON.stringify(chunk.cursor).yellow,
-      JSON.stringify(chunk.length).green,
+    var output = [
+     // '\x1bc' ,
+      JSON.stringify(chunk.cursor).yellow,
       JSON.stringify(chunk.size).white,
+      JSON.stringify(chunk.modes).white
     ];
 
+    /*
     chunk.lines.forEach(function(line) {
       output.push(JSON.stringify(line, null).white);
     });
+   */
     return output.join('\n');
   }
 };

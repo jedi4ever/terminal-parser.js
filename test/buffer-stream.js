@@ -5,12 +5,14 @@ describe('terminal buffer stream', function () {
     var csi = '\x1b[';
     var csiA = '\x1b[1A';
 
-  it.skip('can handle a string of plain characters', function(done) {
+  it('can handle a string of plain characters', function(done) {
     var stream = new TerminalParser.BufferStream();
-
 
     var count = 0;
     var t = [
+      text,
+      text,
+      text,
       text,
       csiA
     ];

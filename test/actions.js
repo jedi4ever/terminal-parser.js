@@ -63,7 +63,7 @@ describe('terminal buffer actions', function () {
 
   });
 
-  it('inserts standard text beyond the screen rows', function(done) {
+  it.only('inserts standard text beyond the screen rows', function(done) {
     var buffer = {};
     buffer.cursor = { x: 0, y: 0 };
     buffer.size = { cols: 4 , rows: 2};
