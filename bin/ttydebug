@@ -142,17 +142,13 @@ opcodes.addTransformation(opcodeFormatter);
 var bufferFormatter = function(chunk, encoding) {
   if (chunk !== null) {
     var output = [
-     // '\x1bc' ,
+      '\x1bc' ,
       JSON.stringify(chunk.cursor).yellow,
       JSON.stringify(chunk.size).white,
-      JSON.stringify(chunk.modes).white
+      JSON.stringify(chunk.modes).white,
+      JSON.stringify(chunk.lines.join('\n')).white
     ];
 
-    /*
-    chunk.lines.forEach(function(line) {
-      output.push(JSON.stringify(line, null).white);
-    });
-   */
     return output.join('\n');
   }
 };
