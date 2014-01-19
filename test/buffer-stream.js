@@ -5,8 +5,15 @@ describe('terminal buffer stream', function () {
     var csi = '\x1b[';
     var csiA = '\x1b[1A';
 
+  it.skip('can handle set defaults if no params are added ', function(done) {
+  });
+
   it('can handle a string of plain characters', function(done) {
-    var stream = new TerminalParser.BufferStream();
+    var options = {
+      cols: 80,
+      rows: 25
+    };
+    var stream = new TerminalParser.BufferStream(options);
 
     var count = 0;
     var t = [
@@ -14,16 +21,12 @@ describe('terminal buffer stream', function () {
       text,
       text,
       text,
-      csiA
     ];
 
     stream.on('data', function(buffer) {
-      count++;
-      if (count === t.length) {
-        expect(buffer).to.be(null);
-        expect(buffer.cursor).not.to.be(null);
-        done();
-       }
+      expect(buffer).not.to.be(null);
+      expect(buffer.cursor).not.to.be(null);
+      done();
     });
 
     stream.write(t.join());

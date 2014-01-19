@@ -63,12 +63,39 @@ describe('terminal buffer actions', function () {
 
   });
 
-  it.only('inserts standard text beyond the screen rows', function(done) {
+  it('inserts standard text beyond the screen rows', function(done) {
+    var buffer = a.initialize(null, 80, 24);
+    buffer.cursor = { x: 0, y: 0 };
+    var text = '';
+    for (var i = 0; i <  22 * 80; i++) {
+      text = text + 'X';
+    }
+    var n = a.insertText(buffer, text);
+    /*
+    console.log('\n');
+    console.log('--------------------------------------------------------------');
+    console.log(n.lines.join('\n'));
+    console.log('--------------------------------------------------------------');
+    */
+
+
+    /*
+    expect(n.lines.length).to.be(2);
+    expect(n.lines[0]).to.eql([ ' ' , 't', 'e', 'x']);
+    expect(n.lines[1]).to.eql([ 't' , ' ', 'i']);
+    expect(n.cursor.x).to.be(3);
+    expect(n.cursor.y).to.be(1);
+    */
+    done();
+
+  });
+
+  it.skip('inserts standard text larger then the the screen', function(done) {
     var buffer = a.initialize(null, 80, 24);
     buffer.cursor = { x: 0, y: 0 };
     console.time('beginText');
     var text = '';
-    for (var i = 0; i <  22 * 80; i++) {
+    for (var i = 0; i <  100 * 80; i++) {
       text = text + 'X';
     }
     var n = a.insertText(buffer, text);
@@ -91,6 +118,7 @@ describe('terminal buffer actions', function () {
     done();
 
   });
+
 
   it('is Beyond Last Row', function(done) {
     var buffer = {};
